@@ -475,7 +475,7 @@
 <canvas id="bg-canvas"></canvas>
 
 <!-- AUDIO -->
-<audio id="bg-music" loop preload="none">
+<audio id="bg-music" loop preload="auto">
   <source src="coldplay - sparks.mp3" type="audio/mpeg" />
 </audio>
 
@@ -751,10 +751,30 @@
     introBtn.classList.add('clicked');
     setTimeout(() => introBtn.classList.remove('clicked'), 500);
 
-    /* play music */
-    audio.play().then(() => {
-      musicBtn.classList.add('playing');
-    }).catch(() => {});
+    /* play music — robust mobile version */
+    const tryPlay = () => {
+      audio.currentTime = 0;
+      const promise = audio.play();
+      if (promise !== undefined) {
+        promise.then(() => {
+          musicBtn.classList.add('playing');
+        }).catch(() => {
+          /* if it fails (e.g. still loading), retry once after a short delay */
+          setTimeout(() => {
+            audio.play().then(() => {
+              musicBtn.classList.add('playing');
+            }).catch(() => {});
+          }, 400);
+        });
+      }
+    };
+
+    if (audio.readyState >= 2) {
+      tryPlay();
+    } else {
+      audio.addEventListener('canplay', tryPlay, { once: true });
+      audio.load();
+    }
 
     /* hide intro */
     introEl.classList.add('hidden');
