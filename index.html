@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>From My Heart</title>
+  <meta name="theme-color" content="#0a0612" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose:  #e8a0b0;
+      --gold:  #d4a84b;
+      --deep:  #0a0612;
+      --mid:   #110d1f;
+      --text:  #f0e8f5;
+      --muted: #9b8fb0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--deep);
+      color: var(--text);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      padding-left:  env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+
+    /* ── CANVAS ── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ════════════════════════════════════════
+       INTRO SCREEN
+    ════════════════════════════════════════ */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: var(--deep);
+      transition: opacity .9s ease, visibility .9s ease;
+    }
+    #intro.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* floating petals on intro only */
+    .intro-petal {
+      position: absolute;
+      font-size: 1rem;
+      opacity: 0;
+      animation: petalFloat linear infinite;
+      pointer-events: none;
+      user-select: none;
+    }
+    @keyframes petalFloat {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      5%   { opacity: .6; }
+      95%  { opacity: .4; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    .intro-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .6rem;
+      font-weight: 300;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--rose);
+      opacity: 0;
+      animation: fadeUp .7s .2s ease forwards;
+    }
+
+    .intro-for {
+      font-size: clamp(1rem, 4vw, 1.4rem);
+      font-style: italic;
+      color: var(--muted);
+      margin: .6rem 0 .2rem;
+      opacity: 0;
+      animation: fadeUp .7s .45s ease forwards;
+    }
+
+    .intro-name {
+      font-size: clamp(3.5rem, 16vw, 7.5rem);
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, #fff 15%, var(--rose) 50%, var(--gold) 85%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+      animation: fadeUp .9s .65s ease forwards;
+    }
+
+    .intro-tagline {
+      margin-top: 1.2rem;
+      font-size: clamp(.9rem, 3vw, 1.15rem);
+      font-style: italic;
+      color: rgba(240,232,245,.5);
+      opacity: 0;
+      animation: fadeUp .7s 1s ease forwards;
+    }
+
+    /* open button */
+    .intro-btn {
+      margin-top: 3rem;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .9rem 2.2rem;
+      border: 1px solid rgba(232,160,176,.4);
+      border-radius: 50px;
+      background: rgba(232,160,176,.06);
+      color: var(--rose);
+      font-family: 'Montserrat', sans-serif;
+      font-size: .68rem;
+      font-weight: 300;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background .3s, border-color .3s, box-shadow .3s;
+      opacity: 0;
+      animation: fadeUp .8s 1.3s ease forwards;
+    }
+    .intro-btn:hover, .intro-btn:active {
+      background: rgba(232,160,176,.14);
+      border-color: var(--rose);
+      box-shadow: 0 0 24px 4px rgba(232,160,176,.15);
+    }
+    .intro-btn svg {
+      width: 1rem;
+      height: 1rem;
+      fill: var(--rose);
+      flex-shrink: 0;
+    }
+
+    /* ripple on click */
+    .intro-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(232,160,176,.2);
+      opacity: 0;
+      transform: scale(1);
+      transition: transform .5s ease, opacity .5s ease;
+    }
+    .intro-btn.clicked::after {
+      transform: scale(1.6);
+      opacity: 0;
+      transition: none;
+    }
+
+    .intro-note {
+      margin-top: 1.2rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .55rem;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: rgba(155,143,176,.45);
+      opacity: 0;
+      animation: fadeUp .6s 1.6s ease forwards;
+    }
+
+    /* ── CONTENT WRAPPER (hidden until intro dismissed) ── */
+    #content {
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    #content.revealed { opacity: 1; }
+
+    /* ════════════════════════════════════════
+       HERO
+    ════════════════════════════════════════ */
+    #hero {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .hero-badge {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .65rem;
+      font-weight: 300;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--rose);
+    }
+    .hero-title {
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      margin: .5rem 0 1.2rem;
+      background: linear-gradient(135deg, #fff 20%, var(--rose) 50%, var(--gold) 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-style: italic;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: var(--muted);
+      max-width: 36ch;
+      line-height: 1.7;
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+    }
+    .scroll-hint span {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .6rem;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scroll-arrow {
+      width: 1px;
+      height: 3rem;
+      background: linear-gradient(to bottom, var(--rose), transparent);
+      animation: scrollPulse 2s ease infinite;
+    }
+
+    /* ════════════════════════════════════════
+       LETTER
+    ════════════════════════════════════════ */
+    #letter {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 6rem 2rem 10rem;
+    }
+
+    .chapter {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity .8s ease, transform .8s ease;
+    }
+    .chapter.visible { opacity: 1; transform: translateY(0); }
+    .chapter + .chapter { margin-top: 4rem; }
+
+    .chapter-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .58rem;
+      font-weight: 400;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .9rem;
+    }
+    .chapter p {
+      font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+      line-height: 1.95;
+      color: rgba(240,232,245,.88);
+      font-weight: 300;
+    }
+    .chapter p + p { margin-top: 1.4rem; }
+
+    /* pull-quote */
+    .pullquote {
+      position: relative;
+      margin: 5rem 0;
+      padding: 2.5rem 2.5rem 2.5rem 3.5rem;
+      border-left: 2px solid var(--rose);
+      opacity: 0;
+      transform: translateX(-30px);
+      transition: opacity .9s ease, transform .9s ease;
+    }
+    .pullquote.visible { opacity: 1; transform: translateX(0); }
+    .pullquote::before {
+      content: '\201C';
+      position: absolute;
+      top: -.4rem;
+      left: .8rem;
+      font-size: 5rem;
+      line-height: 1;
+      color: var(--rose);
+      opacity: .35;
+      font-family: Georgia, serif;
+    }
+    .pullquote p {
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.6;
+      color: #fff;
+    }
+
+    /* divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin: 4rem 0;
+      opacity: 0;
+      transition: opacity .8s ease;
+    }
+    .divider.visible { opacity: 1; }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--rose), transparent);
+    }
+    .divider-icon { display: none; }
+
+    /* ── CLOSING ── */
+    #closing {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 6rem 2rem 10rem;
+    }
+    #closing .closing-line {
+      font-size: clamp(1.5rem, 4vw, 2.8rem);
+      font-style: italic;
+      font-weight: 300;
+      color: #fff;
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    #closing .closing-line.visible { opacity: 1; transform: translateY(0); }
+    #closing .closing-name {
+      margin-top: 2rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .7rem;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 1.2s .3s ease;
+    }
+    #closing .closing-name.visible { opacity: 1; }
+
+    /* ── MUSIC PLAYER ── */
+    #music-btn {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 100;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      border: 1px solid rgba(232,160,176,.35);
+      background: rgba(10,6,18,.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: none; /* hidden until intro dismissed */
+      align-items: center;
+      justify-content: center;
+      transition: border-color .3s, box-shadow .3s;
+    }
+    #music-btn.show { display: flex; }
+    #music-btn:hover {
+      border-color: var(--rose);
+      box-shadow: 0 0 18px 2px rgba(232,160,176,.18);
+    }
+    #music-btn svg { width: 1.1rem; height: 1.1rem; fill: var(--rose); }
+    #music-btn .icon-pause { display: none; }
+    #music-btn.playing .icon-play  { display: none; }
+    #music-btn.playing .icon-pause { display: block; }
+    #music-btn.playing {
+      border-color: var(--rose);
+      animation: musicPulse 2s ease infinite;
+    }
+    #music-label {
+      position: fixed;
+      bottom: 1.55rem;
+      right: 4.8rem;
+      z-index: 100;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .58rem;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      transform: translateX(6px);
+      transition: opacity .4s, transform .4s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #music-btn:hover ~ #music-label,
+    #music-btn.playing ~ #music-label { opacity: 1; transform: translateX(0); }
+
+    /* ── KEYFRAMES ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: .4; transform: scaleY(1); }
+      50%       { opacity: 1;  transform: scaleY(1.15); }
+    }
+    @keyframes musicPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(232,160,176,.4); }
+      50%       { box-shadow: 0 0 0 8px rgba(232,160,176,0); }
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 480px) {
+      #hero { height: 100svh; padding: 1.5rem 1.2rem; }
+      .hero-badge { font-size: .6rem; letter-spacing: .25em; }
+      .hero-title { font-size: clamp(3.2rem, 18vw, 5rem); margin: .4rem 0 1rem; }
+      .hero-sub { font-size: 1rem; max-width: 28ch; line-height: 1.6; }
+      .scroll-hint { bottom: 1.8rem; }
+      .scroll-arrow { height: 2.2rem; }
+      #letter { padding: 3.5rem 1.2rem 6rem; }
+      .chapter + .chapter { margin-top: 2.8rem; }
+      .chapter-label { font-size: .55rem; letter-spacing: .3em; margin-bottom: .7rem; }
+      .chapter p { font-size: 1.05rem; line-height: 1.85; }
+      .chapter p + p { margin-top: 1.1rem; }
+      .pullquote { margin: 3rem 0; padding: 1.4rem 1.2rem 1.4rem 1.6rem; }
+      .pullquote::before { font-size: 3.5rem; top: -.2rem; left: .5rem; }
+      .pullquote p { font-size: 1.15rem; line-height: 1.55; }
+      .divider { margin: 2.5rem 0; }
+      #closing { padding: 4rem 1.5rem 6rem; }
+      #closing .closing-line { font-size: clamp(1.3rem, 7vw, 2rem); line-height: 1.45; }
+      #closing .closing-name { font-size: .6rem; letter-spacing: .3em; margin-top: 1.5rem; }
+      #music-btn { width: 2.6rem; height: 2.6rem; bottom: 1.2rem; right: 1.2rem; }
+      #music-btn svg { width: .95rem; height: .95rem; }
+      #music-label { display: none; }
+      .intro-btn { padding: .8rem 1.8rem; font-size: .62rem; }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+      #letter { padding: 4rem 1.6rem 7rem; }
+      .chapter p { font-size: 1.1rem; line-height: 1.9; }
+      .pullquote { padding: 1.8rem 1.8rem 1.8rem 2.4rem; }
+      .pullquote p { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- AUDIO -->
+<audio id="bg-music" loop preload="none">
+  <source src="coldplay - sparks.mp3" type="audio/mpeg" />
+</audio>
+
+<!-- ══════════════════════════════════════
+     INTRO SCREEN
+══════════════════════════════════════ -->
+<div id="intro">
+  <!-- decorative petals spawned by JS -->
+
+  <p class="intro-eyebrow">a letter</p>
+  <p class="intro-for">for my</p>
+  <h1 class="intro-name">Kitty</h1>
+  <p class="intro-tagline">something I've been wanting to say for a while</p>
+
+  <button class="intro-btn" id="intro-btn" aria-label="Open the letter">
+    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    Open the letter
+  </button>
+
+  <p class="intro-note">music will play · tap to begin</p>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════ -->
+<div id="content">
+
+  <!-- music toggle (shown after intro) -->
+  <button id="music-btn" aria-label="Play background music" title="Play music">
+    <svg class="icon-play"  viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+  </button>
+  <span id="music-label">Coldplay · Sparks</span>
+
+  <!-- HERO -->
+  <section id="hero">
+    <p class="hero-badge">A message from the heart</p>
+    <h1 class="hero-title">To You</h1>
+    <p class="hero-sub">Some things are too big for a text message.<br>So here they are, written out, honest and whole.</p>
+    <div class="scroll-hint">
+      <span>Read on</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- LETTER -->
+  <article id="letter">
+
+    <div class="chapter">
+      <p class="chapter-label">I — Honesty</p>
+      <p>I don't even know how to explain everything I'm feeling right now, but there's one thing I want you to know: I'm genuinely sorry for lying to you about my ex and for all the misunderstandings between us. The cheating issue wasn't real, and I wish I had handled everything better from the beginning.</p>
+      <p>I know I made mistakes, and I can't change the past, no matter how much I wish I could. If I could go back in time, I would choose to be honest with you from the start because you never deserved to be put in a situation where you had to question me or my feelings.</p>
+    </div>
+
+    <div class="pullquote">
+      <p>What I felt for you was real. I never expected you to become someone this important to me.</p>
+    </div>
+
+    <div class="chapter">
+      <p class="chapter-label">II — What I Carried</p>
+      <p>I know you're older than me, and I'm only 17, and maybe there's still a lot I need to learn about love, life, and relationships. But one thing I know is that what I felt for you was real. I never thought the thought of losing you would hurt this much.</p>
+      <p>Honestly, when you told me that you only wanted me as a friend, a part of me broke a little. Not because you did something wrong, and not because I think you owe me love but because deep inside, I was hoping that maybe, just maybe, you could see me as someone more than a friend someday.</p>
+    </div>
+
+    <div class="divider"><span class="divider-icon">✦</span></div>
+
+    <div class="chapter">
+      <p class="chapter-label">III — Who I Wanted to Be for You</p>
+      <p>I wanted to be someone who could make you smile when your day was terrible, someone you could talk to when everything felt heavy, and someone who would remind you that you're appreciated even on the days when you don't feel your best.</p>
+      <p>I wanted to create memories with you that we could look back on and smile about. Maybe I imagined too much, but I never imagined that my feelings would become this deep.</p>
+    </div>
+
+    <div class="chapter">
+      <p class="chapter-label">IV — Gratitude &amp; Honesty</p>
+      <p>I know you still want us to be close friends like before, and I'm genuinely thankful for that because the last thing I want is to lose you completely. But I'm not going to lie and pretend that being just your friend doesn't hurt. It does especially when I think about all the things I wished we could have been.</p>
+      <p>Sometimes I wonder what would have happened if I had done things differently, if I had been more honest, and if I had given you more reasons to trust me instead of reasons to doubt me. Maybe things would be different, or maybe they wouldn't. I'll never know, and I have to learn to accept that.</p>
+    </div>
+
+    <div class="pullquote">
+      <p>Behind all my mistakes is someone who genuinely cares about you and who wants to learn how to do things right.</p>
+    </div>
+
+    <div class="chapter">
+      <p class="chapter-label">V — Growing Up</p>
+      <p>I know I'm still young, and I know I have a lot of growing up to do. I'm not asking you to ignore my mistakes or suddenly change your feelings for me. I just wish you could see that behind all my mistakes is someone who genuinely cares about you and who wants to learn how to do things right.</p>
+      <p>If you ever change your mind someday, I want you to know that I'm willing to give you the honesty, respect, and genuine love that I should have shown you from the beginning. I won't waste that chance, and I won't take your trust for granted. I'll prove through my actions that I've grown not just say things because I'm afraid of losing you.</p>
+    </div>
+
+    <div class="divider"><span class="divider-icon">✦</span></div>
+
+    <div class="chapter">
+      <p class="chapter-label">VI — Your Freedom</p>
+      <p>But if your feelings never change, I'll have to accept that, too because loving you doesn't give me the right to decide what you should feel. Please don't feel like you have to change your mind or become sad because of me. You don't have to carry the weight of my feelings, and you don't owe me a chance just because I care about you this much.</p>
+      <p>Sometimes I even ask myself whether I deserve another chance after everything I've done. But I know I can still learn from my mistakes and become a better person.</p>
+    </div>
+
+    <div class="chapter">
+      <p class="chapter-label">VII — How I Hope You Remember Me</p>
+      <p>I just hope that one day, when you remember me, you won't only remember the lies and misunderstandings. I hope you'll also remember the person who genuinely cared about you, who was happy just talking to you, and who wanted to make you feel special in his own way.</p>
+      <p>I don't know what the future holds for us, and I don't want to treat your words as a promise that we'll eventually be together. I know that for now, I'm your friend, and I'll respect that.</p>
+    </div>
+
+    <div class="pullquote">
+      <p>If there's ever a day when you look at me differently I hope you'll let me show you that I can do better.</p>
+    </div>
+
+    <div class="chapter">
+      <p class="chapter-label">VIII — Until Then</p>
+      <p>Until then, I'll appreciate the friendship you still want to give me, even if I need some time to learn how to handle my feelings. I still care about you, and I won't pretend that you mean nothing to me just because we're not what I hoped we would be.</p>
+      <p>Thank you for being part of my life and for still wanting me around. I hope we can still laugh, talk, and be close like we used to. And if our story ends up being nothing more than a friendship, I'll still be grateful that I got to know someone like you.</p>
+    </div>
+
+    <div class="divider"><span class="divider-icon">✦</span></div>
+
+    <div class="chapter">
+      <p class="chapter-label">IX — My Promise</p>
+      <p>I may not be the person you want romantically, and I may not be the person you choose in the end but my feelings were genuine, and the memories we made will always mean something to me.</p>
+      <p>I'm sorry for the times I failed to show you the best of me. I'm still learning, still growing, and still trying to become someone better. I can't promise that I'll never make another mistake, but I can promise to take responsibility for my actions and learn from them.</p>
+      <p>I still love you, and maybe a part of me will always wonder what could have happened between us if things had been different. But I don't want you to choose me out of pity, guilt, or fear of hurting me. If you ever choose me, I want it to be because your heart genuinely wants me, too.</p>
+    </div>
+
+    <div class="chapter">
+      <p class="chapter-label">X — All I Ask</p>
+      <p>For now, I'll respect your decision, cherish the friendship we still have, and let time take its course. You don't have to say anything after reading this. I just wanted you to know what I've been carrying in my heart.</p>
+      <p>No matter what happens, I genuinely wish you happiness. And if life ever gives us another chance, I hope I can meet that moment as a better, more honest version of myself.</p>
+    </div>
+
+  </article>
+
+  <!-- CLOSING -->
+  <section id="closing">
+    <p class="closing-line">No matter what happens,<br>I genuinely wish you happiness.</p>
+    <p class="closing-name">With love &amp; honesty always</p>
+  </section>
+
+</div><!-- /#content -->
+
+<script>
+  /* ────────────────────────────────────────────
+     CANVAS: starfield + aurora
+  ──────────────────────────────────────────── */
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, stars = [], particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((W * H) / 4500);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.2 + .2, a: Math.random(),
+        da: (Math.random() - .5) * .005,
+        drift: (Math.random() - .5) * .08
+      });
+    }
+  }
+  initStars();
+  window.addEventListener('resize', initStars);
+
+  function spawnParticle() {
+    const types = ['❤', '✦', '·', '♡', '·', '·', '·'];
+    particles.push({
+      x: Math.random() * W, y: H + 20,
+      vx: (Math.random() - .5) * .6, vy: -(Math.random() * .7 + .3),
+      a: Math.random() * .5 + .1, s: Math.random() * 14 + 8,
+      rot: Math.random() * Math.PI * 2, drot: (Math.random() - .5) * .02,
+      type: types[Math.floor(Math.random() * types.length)]
+    });
+  }
+  setInterval(spawnParticle, 600);
+
+  const blobs = [
+    { x: .2, y: .3, r: .35, hue: 290, phase: 0,   speed: .0004 },
+    { x: .7, y: .6, r: .4,  hue: 330, phase: 2.1, speed: .0003 },
+    { x: .5, y: .15,r: .3,  hue: 260, phase: 1.0, speed: .0005 },
+  ];
+
+  function drawAurora() {
+    blobs.forEach(b => {
+      b.phase += b.speed;
+      const cx = (b.x + Math.sin(b.phase) * .08) * W;
+      const cy = (b.y + Math.cos(b.phase * 1.3) * .06) * H;
+      const rx = b.r * W, ry = b.r * H * .5;
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+      g.addColorStop(0,  `hsla(${b.hue},60%,35%,.18)`);
+      g.addColorStop(.5, `hsla(${b.hue},50%,25%,.08)`);
+      g.addColorStop(1,  'transparent');
+      ctx.save();
+      ctx.scale(1, ry / rx);
+      ctx.beginPath();
+      ctx.arc(cx, cy * (rx / ry), rx, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#0a0612');
+    bg.addColorStop(1, '#110d1f');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    drawAurora();
+    stars.forEach(s => {
+      s.a += s.da;
+      if (s.a <= 0 || s.a >= 1) s.da *= -1;
+      s.x += s.drift;
+      if (s.x < 0) s.x = W;
+      if (s.x > W) s.x = 0;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      ctx.fill();
+    });
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    particles = particles.filter(p => p.y > -40 && p.a > 0);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.drot; p.a -= .0012;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.a);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.font = `${p.s}px serif`;
+      ctx.fillStyle = (p.type === '❤' || p.type === '♡') ? '#e8a0b0'
+                    : p.type === '✦' ? '#d4a84b' : 'rgba(255,255,255,.6)';
+      ctx.fillText(p.type, 0, 0);
+      ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  /* ────────────────────────────────────────────
+     INTRO PETALS
+  ──────────────────────────────────────────── */
+  const introEl   = document.getElementById('intro');
+  const petalList = ['❤', '♡', '✦', '·', '❤', '♡'];
+  petalList.forEach((ch, i) => {
+    const el = document.createElement('span');
+    el.className   = 'intro-petal';
+    el.textContent = ch;
+    el.style.left            = `${8 + i * 16}%`;
+    el.style.animationDuration = `${5 + i * 1.4}s`;
+    el.style.animationDelay    = `${i * .7}s`;
+    el.style.color = (ch === '❤' || ch === '♡') ? '#e8a0b0'
+                   : ch === '✦' ? '#d4a84b' : 'rgba(255,255,255,.5)';
+    introEl.appendChild(el);
+  });
+
+  /* ────────────────────────────────────────────
+     INTRO BUTTON → reveal content + play music
+  ──────────────────────────────────────────── */
+  const audio      = document.getElementById('bg-music');
+  const musicBtn   = document.getElementById('music-btn');
+  const introBtn   = document.getElementById('intro-btn');
+  const contentEl  = document.getElementById('content');
+
+  audio.volume = 0.5;
+
+  introBtn.addEventListener('click', () => {
+    /* ripple */
+    introBtn.classList.add('clicked');
+    setTimeout(() => introBtn.classList.remove('clicked'), 500);
+
+    /* play music */
+    audio.play().then(() => {
+      musicBtn.classList.add('playing');
+    }).catch(() => {});
+
+    /* hide intro */
+    introEl.classList.add('hidden');
+
+    /* show content */
+    contentEl.classList.add('revealed');
+    musicBtn.classList.add('show');
+
+    /* trigger scroll-reveal for anything already in view */
+    setTimeout(() => io.takeRecords(), 900);
+  });
+
+  /* ────────────────────────────────────────────
+     SCROLL REVEAL
+  ──────────────────────────────────────────── */
+  const revealEls = document.querySelectorAll(
+    '.chapter, .pullquote, .divider, .closing-line, .closing-name'
+  );
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: .12 });
+  revealEls.forEach(el => io.observe(el));
+
+  /* ────────────────────────────────────────────
+     MUSIC TOGGLE
+  ──────────────────────────────────────────── */
+  musicBtn.addEventListener('click', () => {
+    if (audio.paused) {
+      audio.play().then(() => {
+        musicBtn.classList.add('playing');
+        musicBtn.setAttribute('aria-label', 'Pause background music');
+      }).catch(() => {});
+    } else {
+      audio.pause();
+      musicBtn.classList.remove('playing');
+      musicBtn.setAttribute('aria-label', 'Play background music');
+    }
+  });
+</script>
+</body>
+</html>
