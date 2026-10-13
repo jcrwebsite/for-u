@@ -476,7 +476,7 @@
 
 <!-- AUDIO -->
 <audio id="bg-music" loop preload="auto">
-  <source src="coldplay - sparks.mp3" type="audio/mpeg" />
+  <source src="coldplay%20-%20sparks.mp3" type="audio/mpeg" />
 </audio>
 
 <!-- ══════════════════════════════════════
@@ -746,35 +746,16 @@
 
   audio.volume = 0.5;
 
-  introBtn.addEventListener('click', () => {
+  introBtn.addEventListener('click', async () => {
     /* ripple */
     introBtn.classList.add('clicked');
     setTimeout(() => introBtn.classList.remove('clicked'), 500);
 
-    /* play music — robust mobile version */
-    const tryPlay = () => {
-      audio.currentTime = 0;
-      const promise = audio.play();
-      if (promise !== undefined) {
-        promise.then(() => {
-          musicBtn.classList.add('playing');
-        }).catch(() => {
-          /* if it fails (e.g. still loading), retry once after a short delay */
-          setTimeout(() => {
-            audio.play().then(() => {
-              musicBtn.classList.add('playing');
-            }).catch(() => {});
-          }, 400);
-        });
-      }
-    };
-
-    if (audio.readyState >= 2) {
-      tryPlay();
-    } else {
-      audio.addEventListener('canplay', tryPlay, { once: true });
-      audio.load();
-    }
+    /* Play music directly from user gesture — do NOT call audio.load() first,
+       it cancels the buffering. Just call play() straight away. */
+    audio.play().then(() => {
+      musicBtn.classList.add('playing');
+    }).catch(() => {});
 
     /* hide intro */
     introEl.classList.add('hidden');
@@ -783,7 +764,7 @@
     contentEl.classList.add('revealed');
     musicBtn.classList.add('show');
 
-    /* trigger scroll-reveal for anything already in view */
+    /* trigger scroll-reveal */
     setTimeout(() => io.takeRecords(), 900);
   });
 
@@ -803,12 +784,15 @@
   /* ────────────────────────────────────────────
      MUSIC TOGGLE
   ──────────────────────────────────────────── */
-  musicBtn.addEventListener('click', () => {
+  musicBtn.addEventListener('click', async () => {
     if (audio.paused) {
-      audio.play().then(() => {
+      try {
+        await audio.play();
         musicBtn.classList.add('playing');
         musicBtn.setAttribute('aria-label', 'Pause background music');
-      }).catch(() => {});
+      } catch (err) {
+        console.log('Play failed:', err);
+      }
     } else {
       audio.pause();
       musicBtn.classList.remove('playing');
